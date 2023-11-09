@@ -524,6 +524,11 @@ button:active {
   border-radius: 50px;
   user-select: none;
 }
+.timer-bg.scrolled {
+  position: fixed;
+  z-index: 90;
+  top: 16px;
+}
 
 .main-timer {
   margin-top: 0px;

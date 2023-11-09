@@ -27,6 +27,8 @@ function Timer(){
     const timerRemainsRef = useRef(timerRemains);
     const timerIDRef = useRef(timerIdNumber)
     const timerDurationRef = useRef(timerDuration)
+    const timerMeditationRef = useRef(null);
+    const [scrolledPastMeditation, setScrolledPastMeditation] = useState(false);
     const currentDate = new Date();
     const formattedDate = currentDate.toLocaleDateString("en-GB")
     const handleCheckboxToggle = () => {
@@ -59,9 +61,9 @@ function Timer(){
 
         try {
             const docRef = await addDoc(timerStatsCollectionRef, timerStatsData);
-            // console.log("Timer stats document written with ID: ", docRef.id);
+
         } catch (error) {
-            // console.error("Error adding timer stats document: ", error);
+
         }
     };
 
@@ -112,16 +114,19 @@ function Timer(){
                     console.error('Error adding timerStats to Firestore:', error);
                 }
             } else {
-                // console.log('No user is currently logged in.');
             }
-
-
         }
          const pauseTimer = ()=>{
             clearInterval(intervalId.current)
-
-
     }
+
+    const checkScrollPosition = useCallback(() => {
+        if (timerMeditationRef.current) {
+            const timerMeditationRect = timerMeditationRef.current.getBoundingClientRect();
+            const scrolledPast = timerMeditationRect.top < 0;
+            setScrolledPastMeditation(scrolledPast);
+        }
+    }, []);
 //--функции таймера конец --
 // Смена заголовка таймера
     const timerContentH = useCallback(() => {
@@ -173,6 +178,12 @@ function Timer(){
         };
     }, []);
 
+    useEffect(() => {
+        window.addEventListener("scroll", checkScrollPosition);
+        return () => {
+            window.removeEventListener("scroll", checkScrollPosition);
+        };
+    }, [checkScrollPosition]);
 
 
     //--Эффекты конец --
@@ -205,12 +216,6 @@ function formatTime(arg) {
 
         dispatch(changeTimerRemains(minutes));
 
-
-
-        // const newPercentLeft = (timerRemainsRef.current / timerRemains) * 100;
-
-
-
     };
     //
 
@@ -222,13 +227,12 @@ function formatTime(arg) {
                     <div className="timer-warning-buttons">
                         <button className="timer-warning-continue" type="button" id="timerContinue">Продолжить</button>
                         <button className="timer-warning-login" type="button"
-                                // onClick="window.location.href='./login.html'"
                         >Войти
                         </button>
                     </div>
                 </div>
                 <h1 id="timerH">{timerContentH()}</h1>
-                <div className="timer-bg">
+                <div className={`timer-bg ${scrolledPastMeditation ? "scrolled" : ""}`}>
                     <span className="timer">{formatTime(timerRemains)}</span>
                 </div>
                 <div className="controls">
@@ -240,7 +244,7 @@ function formatTime(arg) {
                     </button>
                 </div>
                 </section>
-            <div className="timerline">
+            <div className="timerline" ref={timerMeditationRef}>
                 <div className="timerline-fill" style={{ width: `${percentLeft}%` }} />
             </div>
             <label htmlFor="radioMeditation">
